@@ -38,6 +38,9 @@ public:
 	NODISCARD void* alloc(uint64_t size) override;
 	void free(void* ptr) override;
 
+	FreeListAllocator(const FreeListAllocator& other) = delete;
+	FreeListAllocator& operator=(const FreeListAllocator& other) = delete;
+
 	~FreeListAllocator() noexcept;
 
 private:
