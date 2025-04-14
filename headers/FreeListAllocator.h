@@ -38,12 +38,10 @@ public:
 	NODISCARD void* alloc(uint64_t size) override;
 	void free(void* ptr) override;
 
-	void print() const;
-
 	~FreeListAllocator() noexcept;
 
 private:
 	void* memory;
 	uint64_t size;
-	Header* freeHead;
+	Header* free_head;
 };

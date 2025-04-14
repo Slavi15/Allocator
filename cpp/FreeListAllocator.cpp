@@ -18,7 +18,7 @@ uint64_t FreeListAllocator::get_next_power_two(uint64_t n) const
 
 NODISCARD FreeListAllocator::Header* FreeListAllocator::find_free_block(uint64_t size) const
 {
-	Header* curr = this->freeHead, * prev = nullptr, * next = nullptr;
+	Header* curr = this->free_head, * prev = nullptr, * next = nullptr;
 
 	while (curr)
 	{
@@ -37,7 +37,7 @@ NODISCARD FreeListAllocator::Header* FreeListAllocator::find_free_block(uint64_t
 
 void FreeListAllocator::remove_free_block(Header* block)
 {
-	Header* current = this->freeHead, * prev = nullptr;
+	Header* current = this->free_head, * prev = nullptr;
 
 	while (current && current != block)
 	{
@@ -56,7 +56,7 @@ void FreeListAllocator::remove_free_block(Header* block)
 		}
 		else
 		{
-			freeHead = next;
+			free_head = next;
 		}
 
 		if (next)
@@ -68,15 +68,15 @@ void FreeListAllocator::remove_free_block(Header* block)
 
 void FreeListAllocator::add_free_block(Header* block)
 {
-	block->set_xor(nullptr, this->freeHead);
+	block->set_xor(nullptr, this->free_head);
 
-	if (this->freeHead)
+	if (this->free_head)
 	{
-		Header* next = this->freeHead->get_next(nullptr);
-		this->freeHead->set_xor(block, next);
+		Header* next = this->free_head->get_next(nullptr);
+		this->free_head->set_xor(block, next);
 	}
 
-	this->freeHead = block;
+	this->free_head = block;
 }
 
 void FreeListAllocator::merge(Header* block)
@@ -93,12 +93,12 @@ void FreeListAllocator::merge(Header* block)
 FreeListAllocator::FreeListAllocator(uint64_t size) :
 	memory(::operator new(size)),
 	size(size),
-	freeHead(nullptr)
+	free_head(nullptr)
 {
-	this->freeHead = static_cast<Header*>(this->memory);
-	this->freeHead->size = this->size - sizeof(Header);
-	this->freeHead->xor_ptr = nullptr;
-	this->freeHead->is_free = true;
+	this->free_head = static_cast<Header*>(this->memory);
+	this->free_head->size = this->size - sizeof(Header);
+	this->free_head->xor_ptr = nullptr;
+	this->free_head->is_free = true;
 }
 
 NODISCARD void* FreeListAllocator::alloc(uint64_t size)
@@ -126,7 +126,7 @@ NODISCARD void* FreeListAllocator::alloc(uint64_t size)
 
 		block->size = allocSize;
 
-		this->freeHead = newBlock;
+		this->free_head = newBlock;
 	}
 
 	block->is_free = false;
@@ -148,19 +148,6 @@ void FreeListAllocator::free(void* ptr)
 	add_free_block(block);
 
 	merge(block);
-}
-
-void FreeListAllocator::print() const
-{
-	std::cout << this->memory << " - " << reinterpret_cast<uintptr_t>(this->memory) + this->size << std::endl;
-
-	Header* curr = reinterpret_cast<Header*>(memory);
-
-	while (curr < reinterpret_cast<Header*>(reinterpret_cast<char*>(this->memory) + this->size))
-	{
-		std::cout << "Block at " << curr << " size: " << curr->size << " status: " << (curr->is_free ? "free" : "allocated") << std::endl;
-		curr = reinterpret_cast<Header*>(reinterpret_cast<char*>(curr) + sizeof(Header) + curr->size);
-	}
 }
 
 FreeListAllocator::~FreeListAllocator() noexcept
